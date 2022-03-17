@@ -1,0 +1,273 @@
+
+# 清除配置文件admin/Admin@huawei第一次要改密码
+reset saved-configuration
+y
+reboot
+n
+y
+clock timezone bj add 08:00:00
+sys
+sysname AR1220C-S_TEST
+ntp-service unicast-server 223.113.97.98 
+#                                         
+aaa                                       
+ local-user s001 password cipher Root@123456
+ local-user s001 privilege level 0        
+ local-user s001 service-type ppp         
+ local-user admin password irreversible-cipher Root@123456
+ local-user admin privilege level 15      
+ local-user admin ftp-directory flash:    
+ local-user admin service-type telnet terminal ftp http
+local-user root password irreversible-cipher Root@123456
+ local-user root privilege level 15      
+ local-user root ftp-directory flash:    
+ local-user root service-type telnet terminal ftp http
+#                                         
+user-interface con 0                      
+ authentication-mode aaa                  
+ idle-timeout 60 0                        
+user-interface vty 0 4                    
+ authentication-mode aaa                  
+ user privilege level 3                   
+ idle-timeout 60 0                        
+ protocol inbound telnet                  
+#                                         
+ftp server enable     
+#                                         
+ telnet server enable                     
+ telnet server port 50002  
+y  
+#
+dhcp enable  
+# vlan3管理，100 AP管理，10-50上网，60L2TP,101AP业务
+vlan batch 2 3 10 20 30 40 50 60 100 101          
+#                                         
+ http server permit interface Vlanif3
+# 
+l2tp enable
+l2tp-group 1                              
+undo tunnel authentication               
+allow l2tp virtual-template 0    
+ip pool L2TP                              
+ gateway-list 192.168.60.1                
+ network 192.168.60.0 mask 255.255.255.0  
+ dns-list 218.4.4.4 114.114.114.114  
+# 
+interface Virtual-Template0               
+ ppp authentication-mode chap             
+ remote address pool L2TP                 
+ ip address 192.168.60.1 255.255.255.0    
+#
+ip pool ap_101                            
+ gateway-list 192.168.101.1               
+ network 192.168.101.0 mask 255.255.255.0 
+ dns-list 218.2.2.2 114.114.114.114  
+#ACL控制上网列表2000上网，3999内网
+acl name Intenet 2000                     
+ rule 5 permit source 192.168.0.0 0.0.255.255 
+acl name GigabitEthernet0/0/11 2001       
+ rule 5 permit source 192.168.20.0 0.0.0.255 
+ rule 6 permit source 192.168.30.0 0.0.0.255 
+acl name GigabitEthernet0/0/12 2999       
+ rule 5 permit source 192.168.10.0 0.0.0.255        
+acl name D2000 3999                       
+ rule 5 permit ip source 192.168.0.0 0.0.255.255 destination 192.168.0.0 0.0.255.255 
+# 分流                                       
+traffic classifier c2 operator or         
+ if-match acl 2001                        
+traffic classifier lan operator or        
+ if-match acl 3999                        
+traffic classifier c1 operator or         
+ if-match acl 2999                        
+#                                         
+traffic behavior lan                      
+traffic behavior b2                       
+ redirect interface Dialer2               
+traffic behavior b1                       
+ redirect interface Dialer1               
+#                                         
+traffic policy redirect                   
+ classifier lan behavior lan precedence 4 
+ classifier c1 behavior b1 precedence 5   
+ classifier c2 behavior b2 precedence 6   
+#                                         
+              
+#                                         
+interface Dialer1                         
+ link-protocol ppp                        
+ ppp chap user 051250130745               
+ ppp chap password cipher 68306569
+ ppp pap local-user admin password cipher 68306569
+ ppp ipcp dns admit-any                   
+ ppp ipcp dns request                     
+ tcp adjust-mss 1200                      
+ ip address ppp-negotiate                 
+ dialer user arweb                        
+ dialer bundle 1                          
+ dialer number 1 autodial                 
+ dialer-group 1                           
+ nat outbound 2000                        
+#                                         
+interface Dialer2                         
+ link-protocol ppp                        
+ ppp chap user 051250130745               
+ ppp chap password simple 68306569        
+ ppp pap local-user 051250130745 password simple 68306569
+ ppp ipcp dns admit-any                   
+ ppp ipcp dns request                     
+ tcp adjust-mss 1200                      
+ ip address ppp-negotiate                 
+ dialer user web                          
+ dialer bundle 2                          
+ dialer number 2 autodial                 
+ dialer-group 2                           
+ nat outbound 2000                                      
+#                                       
+dialer-rule                               
+ dialer-rule 1 ip permit                  
+ dialer-rule 2 ip permit   
+#  
+ip route-static 0.0.0.0 0.0.0.0 Dialer1   
+ip route-static 0.0.0.0 0.0.0.0 Dialer2 preference 80
+#                                     
+interface Vlanif3                         
+ ip address 192.168.3.1 255.255.255.0     
+ dhcp select interface                    
+ dhcp server dns-list 218.2.2.2 114.114.114.114 
+#vlan10限速 下行100Mbps 上行5Mbps ,从PPPOE_1走                                       
+interface Vlanif10                        
+ ip address 192.168.10.1 255.255.255.0    
+ dhcp select interface                    
+ dhcp server dns-list 218.2.2.2 114.114.114.114 
+ qos car inbound source-ip-address range 192.168.10.2 to 192.168.10.254 per-address cir 1024 pir 5120 cbs 2621440 pbs 3932160 green pass yellow pass red discard
+ qos car outbound destination-ip-address range 192.168.10.2 to 192.168.10.254 per-address cir 5120 pir 102400 cbs 26214400 pbs 39321600 green pass yellow pass red discard
+ traffic-policy redirect inbound  
+#vlan20限速 下行200Mbps 上行10Mbps 从PPPOE_2走                                                         
+interface Vlanif20
+ ip address 192.168.20.1 255.255.255.0    
+ dhcp select interface                    
+ dhcp server dns-list 218.2.2.2 114.114.114.114     
+ qos car inbound source-ip-address range 192.168.20.2 to 192.168.20.254 per-address cir 1024 pir 10240 cbs 3932160 pbs 6553600 green pass yellow pass red discard
+ qos car outbound destination-ip-address range 192.168.20.2 to 192.168.20.254 per-address cir 5120 pir 204800 cbs 39321600 pbs 65536000 green pass yellow pass red discard
+ traffic-policy redirect inbound                             
+#             
+#vlan30限速 下行300Mbps 上行50Mbps 从PPPOE_2走                                                         
+interface Vlanif30
+ ip address 192.168.30.1 255.255.255.0    
+ dhcp select interface                    
+ dhcp server dns-list 218.2.2.2 114.114.114.114     
+ qos car inbound source-ip-address range 192.168.30.2 to 192.168.30.254 per-address cir 5120 pir 30960 cbs 65536000 pbs 78643200 green pass yellow pass red discard
+ qos car outbound destination-ip-address range 192.168.30.2 to 192.168.30.254 per-address cir 10240 pir 309600 cbs 78643200 pbs 104857600  green pass yellow pass red discard
+ traffic-policy redirect inbound                             
+#     
+interface Vlanif40
+ ip address 192.168.40.1 255.255.255.0    
+ dhcp select interface                    
+ dhcp server dns-list 218.2.2.2 114.114.114.114
+#     
+interface Vlanif50
+ ip address 192.168.50.1 255.255.255.0    
+ dhcp select interface                    
+ dhcp server dns-list 218.2.2.2 114.114.114.114
+#                                    
+interface Vlanif100                        
+ ip address 192.168.100.1 255.255.255.0    
+ dhcp select interface                    
+ dhcp server dns-list 218.2.2.2 114.114.114.114 
+interface Vlanif101                       
+ ip address 192.168.101.1 255.255.255.0    
+dhcp select global                  
+# 下挂AP                                                
+interface GigabitEthernet0/0/0            
+ port link-type trunk                     
+ port trunk pvid vlan 100                  
+ undo port trunk allow-pass vlan 1        
+ port trunk allow-pass vlan 100 101    
+#                                         
+interface GigabitEthernet0/0/1            
+ port link-type access                    
+ port default vlan 10                      
+#                                         
+interface GigabitEthernet0/0/2     
+ port link-type access                    
+ port default vlan 20      
+#                                         
+interface GigabitEthernet0/0/3     
+ port link-type access                    
+ port default vlan 30 
+#                                       
+interface GigabitEthernet0/0/9            
+ ip address 192.168.3.1 255.255.255.0     
+ dhcp select interface                    
+#                                         
+                                       
+interface GigabitEthernet0/0/11           
+ pppoe-client dial-bundle-number 2        
+ description PPPOE_OUT_2                  
+#                                         
+interface GigabitEthernet0/0/12           
+ pppoe-client dial-bundle-number 1        
+ description PPPOE_OUT_1                   
+#                                                       
+ http server permit interface Vlanif3     
+#                                         
+capwap source interface vlanif100          
+#                                         
+wlan ac                                   
+ap whitelist mac a400-e279-2be0 
+ap whitelist mac 084f-0a9a-b6e0
+security-profile name wlanpassword01             
+security wpa2 psk pass-phrase 12345678 aes
+y
+security-profile name wlanpassword02             
+security wpa2 psk pass-phrase 87654321 aes
+y
+ssid-profile name ssid01_2G                 
+ssid WIFI2.4G
+y                        
+ssid-profile name ssid01_5G                
+ssid WIFI5G 
+y  
+ssid-profile name ssid02_2G                 
+ssid WLAN2.4G  
+y         
+ssid-profile name ssid02_5G                
+ssid WLAN5G    
+y 
+vap-profile name wlan01_2G              
+service-vlan vlan-id 101                
+ssid-profile ssid01_2G                      
+security-profile wlanpassword01                 
+vap-profile name wlan01_5G                
+service-vlan vlan-id 101                
+ssid-profile ssid01_5G                     
+security-profile wlanpassword01    
+vap-profile name wlan02_2G              
+service-vlan vlan-id 101                
+ssid-profile ssid02_2G                      
+security-profile wlanpassword02                 
+vap-profile name wlan02_5G                
+service-vlan vlan-id 101              
+ssid-profile ssid02_5G                     
+security-profile wlanpassword02
+regulatory-domain-profile name Office
+ap-group name Office  
+regulatory-domain-profile  Office 
+y                 
+vap-profile wlan01_2G wlan 1 radio 0        
+vap-profile wlan01_5G wlan 1 radio 1       
+radio 1
+channel 80mhz 161   
+y
+quit
+ap update ftp-server ip-address 192.168.3.100 ftp-username admin ftp-password cipher 12345678
+ap-id 0
+ap-group Office 
+y
+ap-id 1
+ap-group Office
+y
+quit
+save 
+y
+              

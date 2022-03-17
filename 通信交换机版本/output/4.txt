@@ -1,0 +1,140 @@
+#
+ interface GigabitEthernet0/0/1
+ port link-type access
+ port default vlan 10
+#
+ interface GigabitEthernet0/0/2
+ port link-type access
+ port default vlan 10
+#
+ interface GigabitEthernet0/0/3
+ port link-type access
+ port default vlan 10
+#
+ interface GigabitEthernet0/0/4
+ port link-type access
+ port default vlan 10
+#
+ interface GigabitEthernet0/0/5
+ port link-type trunk
+ port trunk allow-pass vlan 20 30 40
+#
+ interface GigabitEthernet0/0/6
+ port link-type trunk
+ port trunk allow-pass vlan 20 30 40
+#
+ interface GigabitEthernet0/0/7
+ port link-type trunk
+ port trunk allow-pass vlan 20 30 40
+#
+ interface GigabitEthernet0/0/8
+ port link-type trunk
+ port trunk allow-pass vlan 20 30 40
+#
+ interface GigabitEthernet0/0/9
+ port link-type trunk
+ port trunk allow-pass vlan 20 30 40
+#
+ interface GigabitEthernet0/0/10
+ port link-type hybrid
+ port hybrid pvid vlan 20 30
+ port hybrid untagged vlan 20 30
+ port hybrid tagged vlan 10
+#
+ interface GigabitEthernet0/0/11
+ port link-type hybrid
+ port hybrid pvid vlan 20 30
+ port hybrid untagged vlan 20 30
+ port hybrid tagged vlan 10
+#
+ interface GigabitEthernet0/0/12
+ port link-type hybrid
+ port hybrid pvid vlan 20 30
+ port hybrid untagged vlan 20 30
+ port hybrid tagged vlan 10
+#
+ interface GigabitEthernet0/0/13
+ port link-type hybrid
+ port hybrid pvid vlan 20 30
+ port hybrid untagged vlan 20 30
+ port hybrid tagged vlan 10
+#
+ interface Eth-Trunk2
+ port link-type trunk
+ port trunk allow-pass vlan 20 30 40
+ mode lacp 
+ lacp preempt enable
+ max active-linknumber 4  
+ lacp preempt delay 10   
+#
+interface GigabitEthernet0/0/6
+ eth-trunk 2    
+ lacp priority 100    
+#
+interface GigabitEthernet0/0/7
+ eth-trunk 2    
+ lacp priority 100    
+#
+interface Dialer1
+link-protocol ppp
+ppp chap user 051212345678
+ppp chap password cipher 12345678
+ppp pap local-user 051212345678 password cipher 12345678
+ppp ipcp dns admit-any
+ppp ipcp dns request
+tcp adjust-mss 1200
+ip address ppp-negotiate
+dialer user arweb
+dialer bundle 1
+dialer number 1 autodial
+dialer-group 1
+nat outbound 2000
+#
+dialer-rule
+dialer-rule 1 ip permit
+#
+ip load-balance hash src-ip
+ip route-static 0.0.0.0 0.0.0.0 Dialer1
+#
+interface Dialer2
+link-protocol ppp
+ppp chap user 051212345678
+ppp chap password cipher 12345678
+ppp pap local-user 051212345678 password cipher 12345678
+ppp ipcp dns admit-any
+ppp ipcp dns request
+tcp adjust-mss 1200
+ip address ppp-negotiate
+dialer user arweb
+dialer bundle 2
+dialer number 2 autodial
+dialer-group 2
+nat outbound 2000
+#
+dialer-rule
+dialer-rule 1 ip permit
+dialer-rule 2 ip permit
+#
+ip load-balance hash src-ip
+ip route-static 0.0.0.0 0.0.0.0 Dialer1
+ip route-static 0.0.0.0 0.0.0.0 Dialer2
+#
+interface GigabitEthernet0/0/12
+ip address 10.10.10.2 255.255.255.0 
+nat outbound 2000 
+#
+ip route-static 0.0.0.0 0.0.0.0 10.10.10.1
+#
+ interface vlanif 10
+ ip address 192.168.10.1 255.255.255.0
+ dhcp select interface
+ dhcp server dns-list 218.2.2.2 114.114.114.114
+#
+ interface vlanif 20
+ ip address 192.168.20.1 255.255.255.0
+ dhcp select global
+#
+ ip pool vlan_20
+ gateway-list 192.168.20.1
+ network 192.168.20.0 mask 255.255.255.0
+ dns-list 9999

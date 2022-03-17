@@ -1,0 +1,149 @@
+AC6005 接口说明
+聚合上联LAN7 7,单口上联LAN6,VLAN3管理192.168.3.254默认配LAN3，STA走VLAN101
+TELNET端口50002
+aaa
+ local-user admin password irreversible-cipher admin@huawei
+ local-user admin privilege level 15      
+ local-user admin service-type ssh http 
+ local-user root password irreversible-cipher admin@huawei
+ local-user root privilege level 15      
+ local-user root service-type ssh http   
+user-interface vty 0 4    
+ idle-timeout 30
+ authentication-mode aaa                  
+ protocol inbound all 
+
+user-interface con 0   
+ idle-timeout 30
+ authentication-mode password             
+ set authentication password cipher 
+Root@123456
+admin@huawei
+admin@huawei
+
+
+# 清除配置文件第一次进配置密码
+reset saved-configuration
+y
+reboot
+n
+y
+sys
+aaa
+ local-user admin password irreversible-cipher admin@huawei
+ local-user admin privilege level 15      
+ local-user admin service-type ssh http telnet
+ local-user root password irreversible-cipher Root@123456
+ local-user root privilege level 15      
+ local-user root service-type ssh http   telnet
+#
+user-interface vty 0 4    
+ idle-timeout 60
+ authentication-mode aaa                  
+ protocol inbound all 
+user-interface con 0   
+ idle-timeout 30
+quit
+#
+dhcp enable
+telnet server enable                            
+telnet server port 50002      
+# vlan3管理，100AP管理，101业务
+vlan batch 3 100 101 
+interface Vlanif3                        
+ ip address 192.168.3.254 255.255.255.0
+ dhcp select interface  
+interface Vlanif100                       
+ ip address 192.168.100.1 255.255.255.0   
+ dhcp select interface
+# STA由上层路由器配置IP，如果做三层这边需要配置IP分配            
+# interface Vlanif101
+# ip address 192.168.101.1 255.255.255.0   
+# dhcp select interface
+# LAN1口下挂AP,LAN8口接上层路由器分配IP
+#G0/07 08链路聚合
+interface Eth-Trunk1
+ port link-type trunk
+ port trunk allow-pass vlan 3 10 to 50 101
+ mode lacp-static
+ lacp preempt enable                     
+ max active-linknumber 3                  
+ lacp preempt delay 10     
+interface GigabitEthernet0/0/7
+ eth-trunk 1
+ lacp priority 100
+interface GigabitEthernet0/0/8
+ eth-trunk 1
+ lacp priority 100
+# 
+interface GigabitEthernet0/0/1
+ description AP_DHCP and STA_DHCP            
+ port link-type trunk                     
+ port trunk pvid vlan 100                 
+ port trunk allow-pass vlan 100 to 101 
+interface GigabitEthernet0/0/3
+ port link-type access
+ port def vlan 3
+#单口接上联路由器方式
+interface GigabitEthernet0/0/6
+ port link-type access
+ port def vlan 101
+# 
+capwap source interface vlanif100 
+wlan
+ap whitelist mac a400-e279-2be0 
+security-profile name wlanpassword01             
+security wpa2 psk pass-phrase 12345678 aes
+y
+security-profile name wlanpassword02             
+security wpa2 psk pass-phrase 87654321 aes
+y
+ssid-profile name ssid01_2G                 
+ssid WIFI2.4G                        
+ssid-profile name ssid01_5G                
+ssid WIFI5G   
+ssid-profile name ssid02_2G                 
+ssid WLAN2.4G           
+ssid-profile name ssid02_5G                
+ssid WLAN5G     
+vap-profile name wlan01_2G              
+service-vlan vlan-id 101                
+ssid-profile ssid01_2G                      
+security-profile wlanpassword01                 
+vap-profile name wlan01_5G                
+service-vlan vlan-id 101  
+ssid-profile ssid01_5G                     
+security-profile wlanpassword01    
+vap-profile name wlan02_2G              
+service-vlan vlan-id 101                
+ssid-profile ssid02_2G                      
+security-profile wlanpassword02                 
+vap-profile name wlan02_5G                
+service-vlan vlan-id 101              
+ssid-profile ssid02_5G                     
+security-profile wlanpassword02
+ap-system-profile name default           
+  lldp report enable                      
+  traffic-optimize broadcast-suppression arp disable
+  traffic-optimize broadcast-suppression igmp disable
+  traffic-optimize broadcast-suppression nd disable
+  traffic-optimize broadcast-suppression other-broadcast disable
+  traffic-optimize broadcast-suppression other-multicast disable
+regulatory-domain-profile name Office
+ap-group name Office  
+regulatory-domain-profile  Office 
+y                 
+vap-profile wlan01_2G wlan 1 radio 0        
+vap-profile wlan01_5G wlan 1 radio 1       
+radio 1
+channel 80mhz 161   
+y
+quit
+ap-id 0
+ap-group Office 
+y
+quit
+quit
+quit
+save 
+y

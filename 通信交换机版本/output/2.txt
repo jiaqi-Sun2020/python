@@ -1,0 +1,60 @@
+#
+interface GigabitEthernet0/0/1
+port link-type access
+port default vlan 10
+#
+interface GigabitEthernet0/0/2
+port link-type access
+port default vlan 10
+#
+interface GigabitEthernet0/0/3
+port link-type access
+port default vlan 10
+#
+interface GigabitEthernet0/0/4
+port link-type access
+port default vlan 10
+#
+interface GigabitEthernet0/0/5
+port link-type access
+port default vlan 20 30 40
+#
+interface GigabitEthernet0/0/6
+port link-type access
+port default vlan 20 30 40
+#
+interface GigabitEthernet0/0/7
+port link-type access
+port default vlan 20 30 40
+#
+interface GigabitEthernet0/0/8
+port link-type access
+port default vlan 20 30 40
+#
+interface GigabitEthernet0/0/9
+port link-type access
+port default vlan 20 30 40
+#
+interface GigabitEthernet0/0/10
+port link-type hybrid
+port hybrid pvid vlan 20 30
+port hybrid untagged vlan 20 30
+port hybrid tagged vlan 10
+#
+interface GigabitEthernet0/0/11
+port link-type hybrid
+port hybrid pvid vlan 20 30
+port hybrid untagged vlan 20 30
+port hybrid tagged vlan 10
+#
+interface GigabitEthernet0/0/12
+port link-type hybrid
+port hybrid pvid vlan 20 30
+port hybrid untagged vlan 20 30
+port hybrid tagged vlan 10
+#
+interface GigabitEthernet0/0/13
+port link-type hybrid
+port hybrid pvid vlan 20 30
+port hybrid untagged vlan 20 30
+port hybrid tagged vlan 10

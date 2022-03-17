@@ -1,0 +1,207 @@
+[S5735S-L32ST4X]display current-configuration 
+!Software Version V200R019C10SPC500
+#
+sysname S5735S-L32ST4X
+#
+vlan batch 2 10 20 30
+#
+authentication-profile name default_authen_profile
+authentication-profile name dot1x_authen_profile
+authentication-profile name dot1xmac_authen_profile
+authentication-profile name mac_authen_profile
+authentication-profile name multi_authen_profile
+authentication-profile name portal_authen_profile
+#
+telnet server enable
+#
+telnet server port 50002
+#
+clock timezone UTC add 00:00:00
+#
+diffserv domain default
+#
+radius-server template default
+#
+pki realm default
+ certificate-check none                   
+#                                         
+free-rule-template name default_free_rule 
+#                                         
+portal-access-profile name portal_access_profile
+#                                         
+aaa                                       
+ authentication-scheme default            
+  authentication-mode local               
+ authentication-scheme radius             
+  authentication-mode radius              
+ authorization-scheme default             
+  authorization-mode local                
+ accounting-scheme default                
+  accounting-mode none                    
+ local-aaa-user password policy administrator
+  password history record number 0        
+  password expire 0                       
+ domain default                           
+  authentication-scheme radius            
+  accounting-scheme default               
+  radius-server default                   
+ domain default_admin                     
+  authentication-scheme default           
+  accounting-scheme default               
+ local-user admin password irreversible-cipher $1c$VkN`.>>n7Y$CGm}IIAf#"q7sSEY@T40&J%}%4d3~Q4KO\$+{N"!$
+ local-user admin privilege level 15      
+ local-user admin service-type telnet terminal http
+#                                         
+interface Vlanif1                         
+#                                         
+interface Vlanif30                        
+ ip address 192.168.30.2 255.255.255.0    
+#                                         
+interface MEth0/0/1                       
+ ip address 192.168.1.253 255.255.255.0   
+#                                         
+interface Eth-Trunk1                      
+ port link-type trunk                     
+ port trunk allow-pass vlan 2 10 20 30    
+ mode lacp                                
+ lacp preempt enable                      
+ max active-linknumber 4                  
+ lacp preempt delay 10                    
+#                                         
+interface GigabitEthernet0/0/1            
+ port link-type trunk                     
+ port trunk allow-pass vlan 10 20 30      
+#                                         
+interface GigabitEthernet0/0/2            
+ port link-type trunk                     
+ port trunk allow-pass vlan 10 20 30      
+#                                         
+interface GigabitEthernet0/0/3            
+ port link-type trunk                     
+ port trunk allow-pass vlan 10 20 30      
+#                                         
+interface GigabitEthernet0/0/4            
+ port link-type trunk                     
+ port trunk allow-pass vlan 10 20 30      
+#                                         
+interface GigabitEthernet0/0/5            
+ port link-type access                    
+ port default vlan 20                     
+#                                         
+interface GigabitEthernet0/0/6            
+ port link-type access                    
+ port default vlan 20                     
+#                                         
+interface GigabitEthernet0/0/7            
+ port link-type access                    
+ port default vlan 20                     
+#                                         
+interface GigabitEthernet0/0/8            
+ port link-type access                    
+ port default vlan 20                     
+#                                         
+interface GigabitEthernet0/0/9            
+ port link-type access                    
+ port default vlan 20                     
+#                                         
+interface GigabitEthernet0/0/10           
+ port link-type access                    
+ port default vlan 20                     
+#                                         
+interface GigabitEthernet0/0/11           
+ port link-type access                    
+ port default vlan 20                     
+#                                         
+interface GigabitEthernet0/0/12           
+ port link-type access                    
+ port default vlan 20                     
+#                                         
+interface GigabitEthernet0/0/13           
+#                                         
+interface GigabitEthernet0/0/14           
+#                                         
+interface GigabitEthernet0/0/15           
+#                                         
+interface GigabitEthernet0/0/16           
+#                                         
+interface GigabitEthernet0/0/17           
+#                                         
+interface GigabitEthernet0/0/18           
+#                                         
+interface GigabitEthernet0/0/19           
+#                                         
+interface GigabitEthernet0/0/20           
+#                                         
+interface GigabitEthernet0/0/21           
+#                                         
+interface GigabitEthernet0/0/22           
+#                                         
+interface GigabitEthernet0/0/23           
+#                                         
+interface GigabitEthernet0/0/24           
+#                                         
+interface GigabitEthernet0/0/25           
+ port link-type access                    
+ port default vlan 2                      
+#                                         
+interface GigabitEthernet0/0/26           
+ port link-type access                    
+ port default vlan 2                      
+#                                         
+interface GigabitEthernet0/0/27           
+ port link-type access                    
+ port default vlan 2                      
+#                                         
+interface GigabitEthernet0/0/28           
+ port link-type access                    
+ port default vlan 30                     
+#                                         
+interface GigabitEthernet0/0/29           
+ port link-type access                    
+ port default vlan 20                     
+#                                         
+interface GigabitEthernet0/0/30           
+ port link-type access                    
+ port default vlan 10                     
+#                                         
+interface GigabitEthernet0/0/31           
+ eth-trunk 1                              
+ lacp priority 100                        
+#                                         
+interface GigabitEthernet0/0/32           
+ eth-trunk 1                              
+ lacp priority 100                        
+#                                         
+interface XGigabitEthernet0/0/1           
+#                                         
+interface XGigabitEthernet0/0/2           
+#                                         
+interface XGigabitEthernet0/0/3           
+#                                         
+interface XGigabitEthernet0/0/4           
+#                                         
+interface NULL0                           
+#                                         
+undo icmp name timestamp-request receive  
+#                                         
+ssh server cipher aes256_ctr aes128_ctr   
+ssh server hmac sha2_256                  
+ssh client cipher aes256_ctr aes128_ctr   
+ssh client hmac sha2_256                  
+ssh server dh-exchange min-len 2048       
+#                                         
+user-interface con 0                      
+ authentication-mode aaa                  
+user-interface vty 0 4                    
+ authentication-mode aaa                  
+ user privilege level 3                   
+ protocol inbound telnet                  
+user-interface vty 16 20                  
+#                                         
+dot1x-access-profile name dot1x_access_profile
+#                                         
+mac-access-profile name mac_access_profile
+#                                         
+ops                                       
+#                                         
+return 

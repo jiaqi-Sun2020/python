@@ -1,0 +1,70 @@
+#
+interface GigabitEthernet0/0/2
+port link-type trunk
+port trunk allow-pass vlan 1 2 3
+#
+interface GigabitEthernet0/0/4
+port link-type trunk
+port trunk allow-pass vlan 1 2 3
+#
+interface GigabitEthernet0/0/6
+port link-type trunk
+port trunk allow-pass vlan 1 2 3
+#
+interface GigabitEthernet0/0/8
+port link-type trunk
+port trunk allow-pass vlan 1 2 3
+#
+interface GigabitEthernet0/0/10
+port link-type trunk
+port trunk allow-pass vlan 1 2 3
+#
+interface GigabitEthernet0/0/1
+port link-type access
+port default vlan 1
+#
+interface GigabitEthernet0/0/3
+port link-type access
+port default vlan 2
+#
+interface GigabitEthernet0/0/5
+port link-type access
+port default vlan 1
+#
+interface GigabitEthernet0/0/7
+port link-type access
+port default vlan 2
+#
+interface GigabitEthernet0/0/9
+port link-type access
+port default vlan 3
+#
+interface GigabitEthernet0/0/27
+port link-type hybrid
+port hybrid pvid vlan 1
+port hybrid untagged vlan 1
+port hybrid tagged vlan 3 4 5
+#
+interface GigabitEthernet0/0/35
+port link-type hybrid
+port hybrid pvid vlan 2
+port hybrid untagged vlan 2
+port hybrid tagged vlan 3 4 5
+#
+interface GigabitEthernet0/0/19
+port link-type hybrid
+port hybrid pvid vlan 1
+port hybrid untagged vlan 1
+port hybrid tagged vlan 3 4 5
+#
+interface GigabitEthernet0/0/51
+port link-type hybrid
+port hybrid pvid vlan 2
+port hybrid untagged vlan 2
+port hybrid tagged vlan 3 4 5
+#
+interface GigabitEthernet0/0/33
+port link-type hybrid
+port hybrid pvid vlan 3
+port hybrid untagged vlan 3
+port hybrid tagged vlan 3 4 5
