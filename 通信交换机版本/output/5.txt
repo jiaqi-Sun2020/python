@@ -1,0 +1,242 @@
+#
+quit
+clock timezone bj add 08:00:00
+sys 
+ntp-service unicast-server 223.113.97.98 
+#
+vlan batch  100 101
+interface GigabitEthernet0/0/0
+ port link-type trunk
+ port trunk allow-pass vlan 100 101
+#
+vlan batch 10
+interface GigabitEthernet0/0/1
+ port link-type access
+ port default vlan10
+#
+vlan batch 20
+interface GigabitEthernet0/0/2
+ port link-type access
+ port default vlan20
+#
+vlan batch 30
+interface GigabitEthernet0/0/3
+ port link-type access
+ port default vlan30
+#
+vlan batch  10 20 30
+interface GigabitEthernet0/0/4
+ port link-type hybrid
+ port hybrid pvid vlan 20 30
+ port hybrid untagged vlan 20 30
+ port hybrid tagged vlan 10
+#
+vlan batch  20 30 40
+interface GigabitEthernet0/0/5
+ port link-type trunk
+ port trunk allow-pass vlan 20 30 40
+# pppoe拨号线路1
+acl name Intenet 2000
+ rule 5 permit 
+interface Dialer1
+ link-protocol ppp
+ ppp chap user 051257666661
+ ppp chap password cipher 15306260006
+ ppp pap local-user 051257666661 password cipher 15306260006
+ ppp ipcp dns admit-any
+ ppp ipcp dns request
+ tcp adjust-mss 1200
+ ip address ppp-negotiate
+ dialer user arweb
+ dialer bundle 1
+ dialer number 1 autodial
+ dialer-group 1
+ nat outbound 2000
+quit 
+ip load-balance hash src-ip
+ip route-static 0.0.0.0 0.0.0.0 Dialer1
+dialer-rule
+ dialer-rule 1 ip permit
+# pppoe拨号线路2
+acl name Intenet 2000
+ rule 5 permit 
+interface Dialer2
+ link-protocol ppp
+ ppp chap user 051257666661
+ ppp chap password cipher 15306260006
+ ppp pap local-user 051257666661 password cipher 15306260006
+ ppp ipcp dns admit-any
+ ppp ipcp dns request
+ tcp adjust-mss 1200
+ ip address ppp-negotiate
+ dialer user arweb
+ dialer bundle 2
+ dialer number 2 autodial
+ dialer-group 2
+ nat outbound 2000
+quit 
+ip load-balance hash src-ip
+ip route-static 0.0.0.0 0.0.0.0 Dialer2
+dialer-rule
+ dialer-rule 2 ip permit
+# vlanif三层
+vlan batch 10
+interface vlanif 10
+ ip address 192.168.10.1 255.255.255.0
+ dhcp select interface
+ dhcp server dns-list 218.2.2.2 114.114.114.114
+# vlanif三层
+vlan batch 20
+interface vlanif 20
+ ip address 192.168.20.1 255.255.255.0
+ dhcp select interface
+ dhcp server dns-list 218.2.2.2 218.4.4.4
+# vlanif三层
+vlan batch 100
+interface vlanif 100
+ ip address 192.168.100.1 255.255.255.0
+ dhcp select interface
+ dhcp server dns-list 9999
+# vlanif三层
+vlan batch 101
+interface vlanif 101
+ ip address 192.168.101.1 255.255.255.0
+ dhcp select interface
+ dhcp server dns-list 9999
+# vlan60 DHCP分配IP地址池
+vlan batch 60
+ip pool vlan_60
+ gateway-list 192.168.60.1
+ network 192.168.60.0 mask 255.255.255.0
+ dns-list 218.2.2.2 114.114.114.114
+# VPN 配置
+vlan batch 60
+l2tp enable
+l2tp-group 1 
+ undo tunnel authentication 
+ allow l2tp virtual-template 1 
+#
+interface Virtual-Template 1 
+ ppp authentication-mode chap 
+ remote address pool L2TP 
+ ip address 192.168.60.1 255.255.255.0
+#
+aaa
+ local-user s001 password cipher admin@123
+ local-user s001 privilege level 0 
+ local-user s001 service-type ppp 
+user-interface vty 0 4 
+ authentication-mode aaa 
+ user privilege level 3  
+ idle-timeout 30 0  
+ protocol inbound all 
+#
+aaa
+ local-user ssa password cipher admin@12356
+ local-user ssa privilege level 15 
+ local-user ssa service-type telnet terminal ftp http 
+user-interface vty 0 4 
+ authentication-mode aaa 
+ user privilege level 3  
+ idle-timeout 30 0  
+ protocol inbound all 
+#
+interface vlanif 20
+ qos car inbound source-ip-address range 192.168.20.2 to 192.168.20.254 per-address cir 1024 pir 20480 cbs 3932160 pbs 6553600 green pass yellow pass red discard 
+#
+interface vlanif 20
+ qos car inbound source-ip-address range 192.168.20.2 to 192.168.20.254 per-address cir 10240 pir 204800 cbs 39321600 pbs 65536000 green pass yellow pass red discard 
+#
+interface vlanif 30
+ qos car inbound source-ip-address range 192.168.30.2 to 192.168.30.254 per-address cir 256 pir 5120 cbs 983040 pbs 1638400 green pass yellow pass red discard 
+#
+interface vlanif 30
+ qos car inbound source-ip-address range 192.168.30.2 to 192.168.30.254 per-address cir 5120 pir 102400 cbs 19660800 pbs 32768000 green pass yellow pass red discard 
+#
+dns resolve
+dns server 114.114.114.114
+ddns policy ORAY1
+ interval 90
+ url oray://sunqingkj1:sq781211@phddnsdev.oray.net
+ interface Dialer1
+ ddns apply policy ORAY1 fqdn ksqy2010.xicp.net
+# 专线固定IP配置
+acl name Intenet 2000
+ rule 5 permit 
+interface GigabitEthernet0/0/12
+ ip address 10.10.10.2 255.255.255.0 
+ nat outbound 2000 
+quit
+ip route-static 0.0.0.0 0.0.0.0 10.10.10.1
+#
+vlan batch 100200300
+interface Eth-Trunk2
+ port link-type trunk
+ port trunk allow-pass vlan100200300
+ mode lacp 
+ lacp preempt enable
+ max active-linknumber 4  
+ lacp preempt delay 10   
+#
+interface GigabitEthernet0/0/6
+ eth-trunk 2   
+ lacp priority 100   
+#
+interface GigabitEthernet0/0/7
+ eth-trunk 2   
+ lacp priority 100   
+# AC FIA AP无线配置
+capwap source interface vlanif100
+wlan ac
+security-profile name wlanpassword100
+ security wpa2 psk pass-phrase 12345678 aes
+y
+ssid-profile name ssid1002G
+ ssid Office_Wifi_2.4G
+y
+ssid-profile name ssid1005G
+ ssid Office_Wifi_5G
+y
+vap-profile name wlan1002G
+ service-vlan vlan-id 101
+ ssid-profile Office_Wifi2G
+vap-profile name wlan1005G
+ service-vlan vlan-id 101
+wired-port-profile name GE0
+ mode root
+ vlan tagged 101
+wired-port-profile name GE1
+ mode endpoint 
+ vlan pvid 101
+ vlan untagged 101
+regulatory-domain-profile name WORK
+ap-group name WORK
+ regulatory-domain-profile WORK
+y
+ vap-profile wlan1002G wlan 1 radio 0
+ vap-profile wlan1005G wlan 1 radio 1
+ radio 1
+ channel 80mhz 161
+y
+Q
+ap-id 0 
+ ap-group WORK 
+ wired-port-profile GE0 gigabitethernet 0 
+ wired-port-profile GE1 gigabitethernet 1 
+y
+#
+acl name SDLAN 3001 
+ rule 5 permit ip source 192.168.0.0 0.0.255.255 destination 192.168.0.0 0.0.255.255  
+acl name Class_int_2001 2001 
+ rule 5 permit source 192.168.1.0 0.0.0.255 
+ rule 6 permit source 192.168.0.0 0.0.0.255 
+ rule 7 permit source 192.168.2.0 0.0.0.255 
+ rule 8 permit source 192.168.0.0 0.0.0.255 
+#
+acl name SDLAN 3001 
+ rule 5 permit ip source 192.168.0.0 0.0.255.255 destination 192.168.0.0 0.0.255.255  
+acl name Class_int_2002 2002 
+ rule 5 permit source 192.168.3.0 0.0.0.255 
+ rule 6 permit source 192.168.0.0 0.0.0.255 
+ rule 7 permit source 192.168.4.0 0.0.0.255 
+ rule 8 permit source 192.168.0.0 0.0.0.255 
