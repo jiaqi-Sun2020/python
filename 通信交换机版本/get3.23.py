@@ -21,6 +21,10 @@ def Splicing_vlan(vlan,space_first=True):  # 列表中的元素按规定拼接�
             for value in vlan:
                 vlan_str = vlan_str + str(value)
     return vlan_str
+
+
+
+
 def Splicing_port(ports):  # 列表中的元素按规定拼接成字符串
     port_str = ""
     # print(vlan)
@@ -138,12 +142,12 @@ def init_vlanif(port,vlan,type,DNS,all_str):  # interface vlan dhcp:interface
     return all_str
 def init_vlanif_global(port,type,all_str):  # interface vlan dhcp:global
     # 拼接vlan数据
-    vlan_str = Splicing_vlan(vlan, space_first=False)
+    # vlan_str = Splicing_vlan(vlan, space_first=False)
     wr = "#\n" \
          "vlan batch {vlan}\n" \
          "interface vlanif {port}\n" \
          " ip address 192.168.{port}.1 255.255.255.0\n" \
-         " dhcp select {type}\n".format(port=port,type=type,vlan=vlan_str)
+         " dhcp select {type}\n".format(port=port,type=type)
     all_str.append(wr)
     return all_str
 def init_ip_pool(vlan,DNS,all_str):  # ip pool
@@ -264,14 +268,14 @@ def init_WLAN(port,user,password,stype,vlan,all_str):  # WLAN AC
     all_str.append(wr)
     return all_str
 def init_ACL_INT(port,vlan):  # ACL控制列表 2000已在上网处做，3001内网列表，
-    vlan_str = Splicing_vlan(vlan, space_first=False)
+    #vlan_str = Splicing_vlan(vlan, space_first=True)
     i = 5
     wr = "#\n" \
          "acl name SDLAN 3001 \n" \
          " rule 5 permit ip source 192.168.0.0 0.0.255.255 destination 192.168.0.0 0.0.255.255  \n" \
          "acl name Class_int_{port} {port} \n".format(port=port)
-    for vlan in vlan_str:
-         wr_str = " rule {i} permit source 192.168.{vlan}.0 0.0.0.255 \n".format(i=i,vlan=vlan)
+    for V in vlan:
+         wr_str = " rule {i} permit source 192.168.{vlan}.0 0.0.0.255 \n".format(i=i,vlan=V )
          i = i+1
          wr += wr_str
     all_str.append(wr)
