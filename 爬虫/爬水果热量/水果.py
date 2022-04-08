@@ -1,6 +1,6 @@
 import requests
 from  bs4  import BeautifulSoup
-
+import json
 def get_web(str):
     web = str.split('"')[1]
     return web
@@ -40,7 +40,8 @@ def get_name_web(all_dicts,page):
     for name_data in name_datas:
         dict = {}
         data= name_data.find("a")
-        dict["name"] = data.text
+        #print(data.text.split("，")[0])
+        dict["name"] = data.text.split("，")[0]  #， 是中文的！！！
         add_web = get_web(str(data))
         web =base_url +add_web
         dict["web"] = web
@@ -50,7 +51,6 @@ def get_name_web(all_dicts,page):
 
 def get_continer(all_dicts):
     for dict in all_dicts:
-        dict = all_dicts[0]
         url = dict['web']
         head = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36 Edg/99.0.1150.39",
@@ -59,13 +59,13 @@ def get_continer(all_dicts):
         selector = BeautifulSoup(get_fruits.text, "html.parser")  # 指定html解析器   <div class="content">
         continer = selector.find_all("span", class_="dt")  # 找到营养名字
         value = selector.find_all("span", class_="dd")
-
+        # print(continer,value,)
         N_name = Nutrition_name(continer)
         N_value = Nutrition_value(value)
         # print(N_name)
         # print(N_value)
         for i, name in enumerate(N_name):
-            dict[name] = float(N_value[i])
+            dict[name] = N_value[i]
     return all_dicts
 
 #===========main
@@ -76,8 +76,11 @@ for page in range(0,1):  #
 # print(all_dicts)
 all_dicts = get_continer(all_dicts)
 
+
 print(all_dicts)
     #print(get_fruits.text)
     #print(continer)
+with open('./fruits.json', 'w', encoding='utf-8') as fp:
+    json.dump(all_dicts, fp=fp, ensure_ascii=False)
 
 
