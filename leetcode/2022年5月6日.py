@@ -44,6 +44,20 @@ class RecentCounter:
             self.q.popleft()
         return len(self.q)
 
+
+
+
+
+class RecentCounter:
+
+    def __init__(self):
+        self.req = []  # 用于存放请求
+
+    def ping(self, t: int) -> int:
+        self.req.append(t)  # 先将请求添加的列表
+        while t-self.req[0] > 3000:  # 循环判断是否有超出3000ms的请求
+            del self.req[0]  # 删除超出的请求
+        return len(self.req)  # 返回3000ms以内的请求
 """
 
 
